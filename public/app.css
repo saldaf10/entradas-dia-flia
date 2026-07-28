@@ -79,6 +79,9 @@ a { color: var(--violeta); }
   border-radius: var(--radio); padding: 22px; box-shadow: var(--sombra);
 }
 .tarjeta.plana { box-shadow: none; }
+/* La tarjeta del generador: es la accion principal de la pagina. */
+.tarjeta.destacada { border-color: #ddd6fe; background: linear-gradient(180deg, #fdfbff, #fff 120px); }
+.titulo-seccion { margin: 12px 0 4px; font-size: 1.35rem; }
 
 .etiqueta {
   display: inline-flex; align-items: center; gap: 8px;
@@ -138,6 +141,8 @@ th {
   border-bottom: 1px solid var(--borde); white-space: nowrap;
 }
 td { padding: 12px 16px; border-bottom: 1px solid #f1f5f9; vertical-align: middle; }
+/* El codigo y la fecha se leen de un vistazo: mejor scroll horizontal que partirlos. */
+td.mono, td.fecha { white-space: nowrap; }
 tr:last-child td { border-bottom: none; }
 tr.usada td:first-child { color: var(--gris); }
 

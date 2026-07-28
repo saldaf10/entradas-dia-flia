@@ -3,8 +3,8 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Evento · Boletas Colegio Fontán</title>
-  <link rel="stylesheet" href="/app.css">
+  <title>Boletas · Colegio Fontán</title>
+  <link rel="stylesheet" href="/app.css?v=__V__">
   <link rel="icon" href="data:,">
 </head>
 <body>
@@ -12,7 +12,7 @@
     <div class="interior">
       <a class="marca" href="/"><span class="logo">F</span><strong>Boletería Fontán</strong></a>
       <nav>
-        <a href="/">Eventos</a>
+        <a href="/">Boletas</a>
         <a href="/escanear">Escanear</a>
         <button id="salir" class="texto">Salir</button>
       </nav>
@@ -21,23 +21,50 @@
 
   <main class="contenido pila">
     <div>
-      <a href="/" class="mini">← Todos los eventos</a>
+      <span class="etiqueta">Boletería</span>
       <h1 id="titulo" class="titulo-pagina">…</h1>
-      <p id="detalle" class="silencio"></p>
+      <p class="silencio fila">
+        <span id="detalle"></span>
+        <button id="editar" class="texto chico">Editar datos del evento</button>
+      </p>
     </div>
+
+    <form id="forma-evento" class="tarjeta pila oculto">
+      <h2>Datos del evento</h2>
+      <p class="mini">Esto es lo que se imprime en cada boleta.</p>
+      <div class="campos">
+        <div>
+          <label for="nombre">Nombre del evento</label>
+          <input id="nombre" required maxlength="90" placeholder="Día de la Familia 2026">
+        </div>
+        <div>
+          <label for="fecha">Fecha <span class="mini">(opcional)</span></label>
+          <input id="fecha" maxlength="60" placeholder="Sábado 15 de agosto, 9:00 a.m.">
+        </div>
+        <div>
+          <label for="lugar">Lugar <span class="mini">(opcional)</span></label>
+          <input id="lugar" maxlength="90" placeholder="Sede campestre">
+        </div>
+      </div>
+      <div class="fila">
+        <button type="submit">Guardar</button>
+        <button type="button" id="cancelar" class="texto">Cancelar</button>
+      </div>
+    </form>
 
     <section id="cifras" class="cifras"></section>
 
-    <section class="tarjeta">
-      <h2>Generar boletas</h2>
+    <section class="tarjeta destacada">
+      <span class="etiqueta">Paso 1</span>
+      <h2 class="titulo-seccion">Generar códigos QR</h2>
       <p class="mini separa-abajo">
-        Cada boleta recibe un código único e irrepetible. Puedes generar varios lotes;
-        la numeración continúa donde quedó.
+        Cada boleta recibe un QR único e irrepetible. Al terminar se descarga
+        automáticamente un PDF por boleta, listo para enviar a cada comprador.
       </p>
       <form id="forma-lote" class="pila">
         <div class="campos">
           <div>
-            <label for="cantidad">Cantidad</label>
+            <label for="cantidad">¿Cuántas boletas?</label>
             <input id="cantidad" type="number" min="1" max="500" value="50" required>
           </div>
           <div>
@@ -50,15 +77,16 @@
           </div>
         </div>
         <div class="fila">
-          <button type="submit">Generar boletas</button>
-          <button type="button" id="descargar-todo" class="suave">Descargar todas (ZIP de PDFs)</button>
+          <button type="submit" id="generar">Generar boletas y descargar</button>
+          <button type="button" id="descargar-todo" class="suave">Volver a descargar todas</button>
         </div>
+        <p id="progreso" class="mini"></p>
       </form>
     </section>
 
     <section class="tarjeta">
       <div class="fila separa-abajo">
-        <h2 class="crece">Boletas</h2>
+        <h2 class="crece">Boletas emitidas</h2>
         <input id="buscar" class="campo-corto" placeholder="Buscar número o código" maxlength="40">
         <select id="filtro" class="campo-corto">
           <option value="">Todas</option>
@@ -87,6 +115,6 @@
     </section>
   </main>
 
-  <script type="module" src="/evento.js"></script>
+  <script type="module" src="/panel.js?v=__V__"></script>
 </body>
 </html>

@@ -8,12 +8,15 @@
   "scripts": {
     "start": "node src/server.js",
     "dev": "node --watch src/server.js",
-    "usuario": "node scripts/usuario.js"
+    "usuario": "node scripts/usuario.js",
+    "vendor": "node scripts/vendor.js",
+    "postinstall": "node scripts/vendor.js"
   },
   "engines": {
     "node": ">=22.5"
   },
   "dependencies": {
+    "@libsql/client": "^0.17.4",
     "archiver": "^7.0.1",
     "cookie-parser": "^1.4.7",
     "express": "^4.21.2",

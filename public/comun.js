@@ -64,11 +64,32 @@ export function prepararBarra() {
   });
 }
 
-export function descargar(url) {
+export function descargar(url, nombre) {
   const a = document.createElement('a');
   a.href = url;
   a.rel = 'noopener';
+  // Con blob: el nombre debe ir aqui; con una URL del servidor lo pone Content-Disposition.
+  if (nombre) a.download = nombre;
   document.body.appendChild(a);
   a.click();
   a.remove();
+}
+
+/**
+ * Descarga trayendo el archivo primero. Necesario para las descargas en varias
+ * partes: encadenar enlaces sueltos hace que el navegador bloquee las siguientes.
+ */
+export async function descargarArchivo(url) {
+  const res = await fetch(url, { credentials: 'same-origin' });
+  if (!res.ok) {
+    const datos = await res.json().catch(() => ({}));
+    throw new Error(datos.error || `Error ${res.status}`);
+  }
+
+  const nombre = /filename="([^"]+)"/.exec(res.headers.get('Content-Disposition') || '')?.[1]
+    || 'boletas.zip';
+  const enlace = URL.createObjectURL(await res.blob());
+  descargar(enlace, nombre);
+  // Se libera tarde: revocarlo de inmediato cancela la descarga en algunos navegadores.
+  setTimeout(() => URL.revokeObjectURL(enlace), 60000);
 }

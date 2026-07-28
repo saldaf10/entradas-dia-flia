@@ -50,9 +50,8 @@ function pitar(resultado) {
 function mostrar(datos) {
   veredicto.className = `veredicto ${datos.resultado}`;
   const numero = datos.boleta ? `Boleta N.º ${String(datos.boleta.numero).padStart(4, '0')}` : 'Sin boleta';
-  const evento = datos.evento ? ` · ${esc(datos.evento.nombre)}` : '';
   veredicto.innerHTML = `
-    <p class="mini">${esc(numero)}${evento}</p>
+    <p class="mini">${esc(numero)}</p>
     <p class="titulo">${TITULOS[datos.resultado] || datos.resultado}</p>
     <p class="silencio">${esc(datos.mensaje)}</p>
     ${datos.boleta ? `<p class="mini mono separa-arriba">${esc(datos.boleta.codigo_legible)} · ${esc(datos.boleta.categoria)}</p>` : ''}`;

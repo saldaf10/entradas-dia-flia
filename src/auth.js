@@ -1,5 +1,5 @@
 import { randomBytes, scryptSync, timingSafeEqual } from 'node:crypto';
-import { db, ahora } from './db.js';
+import { fila, ejecutar, ahora } from './db.js';
 
 const SCRYPT = { N: 16384, r: 8, p: 1, keylen: 64 };
 const DIAS_SESION = 7;
@@ -18,62 +18,72 @@ function claveValida(clave, hashHex, salt) {
   return esperado.length === calculado.length && timingSafeEqual(esperado, calculado);
 }
 
-export function crearUsuario(usuario, clave) {
+export async function crearUsuario(usuario, clave) {
   const { hash, salt } = hashClave(clave);
-  db.prepare(
-    'INSERT INTO usuarios (usuario, clave_hash, clave_salt, creado_en) VALUES (?, ?, ?, ?)'
-  ).run(usuario, hash, salt, ahora());
+  await ejecutar(
+    'INSERT INTO usuarios (usuario, clave_hash, clave_salt, creado_en) VALUES (?, ?, ?, ?)',
+    [usuario, hash, salt, ahora()]
+  );
 }
 
-export function cambiarClave(usuario, clave) {
+export async function cambiarClave(usuario, clave) {
   const { hash, salt } = hashClave(clave);
-  const r = db
-    .prepare('UPDATE usuarios SET clave_hash = ?, clave_salt = ? WHERE usuario = ?')
-    .run(hash, salt, usuario);
-  if (r.changes) db.prepare('DELETE FROM sesiones WHERE usuario_id IN (SELECT id FROM usuarios WHERE usuario = ?)').run(usuario);
-  return r.changes > 0;
+  const r = await ejecutar(
+    'UPDATE usuarios SET clave_hash = ?, clave_salt = ? WHERE usuario = ?',
+    [hash, salt, usuario]
+  );
+  if (r.cambios) {
+    await ejecutar(
+      'DELETE FROM sesiones WHERE usuario_id IN (SELECT id FROM usuarios WHERE usuario = ?)',
+      [usuario]
+    );
+  }
+  return r.cambios > 0;
 }
 
-export function verificar(usuario, clave) {
-  const fila = db.prepare('SELECT * FROM usuarios WHERE usuario = ?').get(usuario);
-  if (!fila) {
+export async function verificar(usuario, clave) {
+  const f = await fila('SELECT * FROM usuarios WHERE usuario = ?', [usuario]);
+  if (!f) {
     // Gasta el mismo tiempo que un usuario real para no filtrar cuales existen.
     scryptSync(clave, 'salt-inexistente', SCRYPT.keylen, SCRYPT);
     return null;
   }
-  return claveValida(clave, fila.clave_hash, fila.clave_salt) ? fila : null;
+  return claveValida(clave, f.clave_hash, f.clave_salt) ? f : null;
 }
 
-export function abrirSesion(usuarioId) {
+export async function abrirSesion(usuarioId) {
   const id = randomBytes(32).toString('hex');
   const expira = new Date(Date.now() + DIAS_SESION * 864e5).toISOString();
-  db.prepare('INSERT INTO sesiones (id, usuario_id, creada_en, expira_en) VALUES (?, ?, ?, ?)')
-    .run(id, usuarioId, ahora(), expira);
+  await ejecutar('INSERT INTO sesiones (id, usuario_id, creada_en, expira_en) VALUES (?, ?, ?, ?)',
+    [id, usuarioId, ahora(), expira]);
   return { id, expira };
 }
 
-export function cerrarSesion(id) {
-  if (id) db.prepare('DELETE FROM sesiones WHERE id = ?').run(id);
+export async function cerrarSesion(id) {
+  if (id) await ejecutar('DELETE FROM sesiones WHERE id = ?', [id]);
 }
 
-export function limpiarSesiones() {
-  db.prepare('DELETE FROM sesiones WHERE expira_en < ?').run(ahora());
+export async function limpiarSesiones() {
+  await ejecutar('DELETE FROM sesiones WHERE expira_en < ?', [ahora()]);
 }
 
 /** Middleware: adjunta req.usuario si la cookie de sesion es valida. */
-export function cargarSesion(req, _res, next) {
-  const sid = req.cookies?.[COOKIE];
-  if (sid) {
-    const fila = db
-      .prepare(
+export async function cargarSesion(req, _res, next) {
+  try {
+    const sid = req.cookies?.[COOKIE];
+    if (sid) {
+      const f = await fila(
         `SELECT u.id, u.usuario, s.id AS sid FROM sesiones s
          JOIN usuarios u ON u.id = s.usuario_id
-         WHERE s.id = ? AND s.expira_en > ?`
-      )
-      .get(sid, ahora());
-    if (fila) req.usuario = fila;
+         WHERE s.id = ? AND s.expira_en > ?`,
+        [sid, ahora()]
+      );
+      if (f) req.usuario = f;
+    }
+    next();
+  } catch (err) {
+    next(err);
   }
-  next();
 }
 
 /** Middleware: exige sesion. Responde JSON en /api y redirige en las paginas. */

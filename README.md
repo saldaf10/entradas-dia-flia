@@ -1,134 +1,152 @@
 # Entradas · Colegio Fontán
 
-Generación y validación de boletas con código QR para los eventos del colegio.
-Una sola persona entra con usuario y contraseña, genera las boletas, descarga un
-PDF por boleta para enviárselo a cada comprador, y en la puerta escanea los QR
-para saber cuáles ya se usaron.
+Boletas con código QR para los eventos del colegio. Una sola persona entra con
+usuario y contraseña, genera las boletas, descarga un PDF por boleta para
+enviárselo a cada comprador, y en la puerta escanea los QR desde el celular para
+saber cuáles ya se usaron.
 
 No procesa pagos: el cobro se maneja por fuera.
 
+Solo hay **un evento a la vez**. Sus datos (nombre, fecha, lugar) se editan desde
+la misma pantalla principal y son los que salen impresos en la boleta.
+
 ---
 
-## Poner a andar
+## Las dos pantallas
 
-Requiere **Node 22.5 o superior** (usa el módulo `node:sqlite` incorporado, así que
-no hay que compilar nada).
+**Boletas** (`/`) — es la pantalla principal y ahí mismo está el generador:
+
+1. *Generar códigos QR* → escribe cuántas boletas y presiona **Generar boletas y
+   descargar**. Al terminar bajan solas, en ZIP, con un PDF por boleta.
+2. Abajo queda la lista de todas las boletas emitidas, con su estado. Desde ahí
+   puedes bajar el PDF de una sola boleta o anularla.
+
+Puedes generar varios lotes; la numeración continúa donde quedó.
+
+**Escanear** (`/escanear`) — para la puerta el día del evento. Apunta la cámara al
+QR y sale en grande si el ingreso está autorizado o si la boleta ya se usó.
+
+- **Solo consultar**: revisa una boleta sin marcarla como usada.
+- **Código a mano**: si la cámara falla, se escribe el código impreso bajo el QR.
+  Acepta minúsculas, con o sin guiones.
+
+---
+
+## Correr en el computador
+
+Requiere **Node 22.5 o superior**.
 
 ```bash
 npm install
-```
-
-Crea el usuario que va a manejar la boletería:
-
-```bash
 npm run usuario -- crear mama "una-contraseña-larga-y-propia"
-```
-
-Arranca:
-
-```bash
 npm start
 ```
 
-Queda en `http://localhost:3000`. Otras acciones de usuarios:
+Queda en `http://localhost:3000` y guarda todo en `data/entradas.db`.
+
+Otras acciones:
 
 ```bash
 npm run usuario -- listar
 npm run usuario -- clave mama "contraseña-nueva"
 ```
 
-Cambiar la contraseña cierra todas las sesiones abiertas de esa persona.
+Cambiar la contraseña cierra las sesiones abiertas de esa persona.
 
 ---
 
-## Cómo se usa
+## Publicar en Vercel
 
-1. **Eventos** → crear el evento. El nombre, la fecha y el lugar son lo que se
-   imprime en la boleta.
-2. **Generar boletas** → cantidad y categoría (General, Adulto, Niño…). Al terminar
-   se descarga automáticamente un ZIP con **el lote recién creado**, un PDF por boleta.
-   Puedes generar varios lotes: la numeración continúa donde quedó.
-3. **Enviar** cada PDF a su comprador (WhatsApp, correo, lo que sea).
-4. **Escanear** → en la puerta, desde el celular. Apunta la cámara al QR y sale
-   en grande si el ingreso está autorizado o si la boleta ya se había usado.
+En Vercel el disco se borra en cada despliegue, así que la base de datos tiene
+que vivir fuera. Se usa **Turso**, que es SQLite alojado y tiene plan gratuito de
+sobra para esto.
 
-Detalles que ayudan el día del evento:
+**1. Crear la base** en [turso.tech](https://turso.tech). Al crearla te da dos
+datos: la URL (`libsql://…`) y un token.
 
-- **Solo consultar**: revisa una boleta sin marcarla como usada.
-- **Código a mano**: si la cámara falla o el QR está borroso, se escribe el código
-  impreso debajo del QR. Acepta minúsculas, con o sin guiones.
-- **Anular**: una boleta anulada deja de permitir el ingreso (por ejemplo, si se
-  devolvió el dinero). Se puede restaurar.
-- **Descargar todas**: vuelve a generar el ZIP completo del evento por si hay que
-  reenviar algo.
+**2. Subir el repo a GitHub** e importarlo en Vercel.
 
----
+**3. En Vercel → Settings → Environment Variables**, agregar:
 
-## La cámara necesita HTTPS
+| Variable | Valor |
+| --- | --- |
+| `TURSO_URL` | la URL `libsql://…` |
+| `TURSO_TOKEN` | el token |
 
-Los navegadores solo dan acceso a la cámara en `https://` o en `localhost`. Si abres
-la app desde un celular apuntando a la IP del computador por `http://`, la cámara
-**no** va a abrir — el escáner lo avisa y queda el campo de código a mano.
+**4. Desplegar.** Las tablas se crean solas la primera vez que alguien entra.
 
-Para escanear con la cámara, publica la app en un servicio que dé HTTPS
-(Render, Railway, Fly.io, o un servidor del colegio con certificado) y entra por
-ese dominio.
+**5. Crear el usuario en la base de producción**, desde tu computador apuntando a
+Turso:
 
-Al desplegar:
+```bash
+TURSO_URL="libsql://…" TURSO_TOKEN="…" npm run usuario -- crear mama "la-contraseña"
+```
 
-- `NODE_ENV=production` — hace que la cookie de sesión sea `Secure`.
-- `PORT` — el que asigne el hosting.
-- `DB_FILE` — ruta del archivo SQLite. Por defecto `data/entradas.db`.
-  **Tiene que estar en un disco persistente**, o las boletas se pierden en cada
-  reinicio. En Render eso es un *Persistent Disk*; en plataformas serverless
-  (Vercel, Netlify Functions) el disco es efímero y este diseño no aplica.
+Sin esas variables el comando trabaja sobre el archivo local; con ellas, sobre la
+base real. Es el mismo comando para cambiar la contraseña después.
+
+### La cámara y el HTTPS
+
+Los navegadores solo dan acceso a la cámara en `https://` o en `localhost`. Vercel
+da HTTPS, así que desde el celular el escáner funciona. Si en cambio abres la app
+por la IP del computador (`http://192.168.…`), la cámara **no** abre — el escáner
+lo avisa y queda disponible el campo de código a mano.
+
+### Por qué las descargas grandes vienen partidas
+
+Una función de Vercel tiene límite de tiempo y de tamaño de respuesta, así que
+cada ZIP trae máximo **200 boletas**. Si generas 500, bajan tres archivos seguidos
+y la pantalla te va diciendo por cuál va. No hay que hacer nada especial.
 
 ---
 
 ## Copia de seguridad
 
-Toda la información vive en un solo archivo. Copiarlo es todo el respaldo:
+Con base local, todo está en un archivo:
 
 ```bash
 cp data/entradas.db respaldo-$(date +%F).db
 ```
 
+Con Turso, desde el panel de Turso o con su CLI (`turso db shell … .dump`).
 Vale la pena hacerlo la noche antes del evento.
 
 ---
 
 ## Sobre la seguridad
 
-Lo que hay, y por qué alcanza para esto:
-
 - La contraseña se guarda con **scrypt** y sal aleatoria, nunca en texto plano.
 - La sesión es una cookie `HttpOnly` + `SameSite=Lax` con un token aleatorio de
   256 bits, guardado en la base y con vencimiento a 7 días.
 - **Máximo 8 intentos de login cada 15 minutos** por IP.
 - El código de cada boleta son **80 bits aleatorios** (16 símbolos). No es
-  correlativo ni deducible: nadie puede inventarse una boleta válida a partir de otra.
-- La boleta se marca como usada con un `UPDATE ... WHERE estado = 'disponible'`
-  en una sola operación. Si dos personas escanean la misma boleta al mismo tiempo
-  en puertas distintas, **solo una recibe "ingreso autorizado"**.
+  correlativo ni deducible: nadie puede inventarse una boleta válida a partir de
+  otra.
+- La boleta se marca como usada con un `UPDATE … WHERE estado = 'disponible'` en
+  una sola operación. Si dos personas escanean la misma boleta al mismo tiempo en
+  puertas distintas, **solo una recibe "ingreso autorizado"**.
 - Todos los escaneos quedan registrados, incluidos los códigos falsos.
 - Cabeceras `Content-Security-Policy`, `X-Frame-Options` y `nosniff`; nada de
   JavaScript en línea ni librerías traídas de CDN.
 
 Lo que **no** hay, a propósito: no hay registro público de usuarios, ni
 recuperación de contraseña por correo, ni roles. Los usuarios se crean desde la
-terminal del servidor.
+terminal.
 
 ---
 
 ## Estructura
 
 ```
-src/server.js     Express, cabeceras de seguridad, rutas de páginas
-src/rutas.js      API: eventos, boletas, validación, descargas
+api/index.js      Entrada para Vercel (la misma app, sin listen)
+src/app.js        Express, cabeceras, rutas de páginas
+src/server.js     Arranque local
+src/rutas.js      API: evento, boletas, validación, descargas
 src/auth.js       Contraseñas (scrypt), sesiones, límite de intentos
-src/db.js         SQLite y esquema
+src/db.js         Base de datos: archivo local o Turso
 src/codigos.js    Generación y normalización de los códigos
 src/pdf.js        Diseño de la boleta en PDF
-public/           Interfaz (sin build ni framework)
+paginas/          HTML (servido por Express, no es estático)
+public/           CSS, JS y jsQR
 scripts/usuario.js
 ```

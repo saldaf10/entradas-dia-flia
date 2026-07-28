@@ -6,7 +6,7 @@
  *   npm run usuario -- clave   <usuario> <contrasena>
  *   npm run usuario -- listar
  */
-import { db } from '../src/db.js';
+import { fila, filas, listo } from '../src/db.js';
 import { crearUsuario, cambiarClave } from '../src/auth.js';
 
 const [accion, usuario, clave] = process.argv.slice(2);
@@ -22,20 +22,22 @@ function exigirClave() {
   }
 }
 
+await listo();
+
 switch (accion) {
   case 'crear': {
     exigirClave();
-    if (db.prepare('SELECT 1 FROM usuarios WHERE usuario = ?').get(usuario)) {
+    if (await fila('SELECT 1 FROM usuarios WHERE usuario = ?', [usuario])) {
       console.error(`El usuario "${usuario}" ya existe. Usa "clave" para cambiarle la contrasena.`);
       process.exit(1);
     }
-    crearUsuario(usuario, clave);
+    await crearUsuario(usuario, clave);
     console.log(`Usuario "${usuario}" creado.`);
     break;
   }
   case 'clave': {
     exigirClave();
-    if (!cambiarClave(usuario, clave)) {
+    if (!(await cambiarClave(usuario, clave))) {
       console.error(`No existe el usuario "${usuario}".`);
       process.exit(1);
     }
@@ -43,9 +45,9 @@ switch (accion) {
     break;
   }
   case 'listar': {
-    const filas = db.prepare('SELECT usuario, creado_en FROM usuarios ORDER BY id').all();
-    if (!filas.length) console.log('No hay usuarios.');
-    for (const f of filas) console.log(`${f.usuario}\t(creado ${f.creado_en.slice(0, 10)})`);
+    const lista = await filas('SELECT usuario, creado_en FROM usuarios ORDER BY id');
+    if (!lista.length) console.log('No hay usuarios.');
+    for (const f of lista) console.log(`${f.usuario}\t(creado ${String(f.creado_en).slice(0, 10)})`);
     break;
   }
   default:
@@ -53,3 +55,5 @@ switch (accion) {
     console.log('  npm run usuario -- crear maria "una-clave-larga"');
     process.exit(1);
 }
+
+process.exit(0);

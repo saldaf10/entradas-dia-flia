@@ -78,9 +78,9 @@ async function qrPng(codigo) {
  * Dibuja una boleta por pagina. Devuelve el PDFDocument para poder
  * reutilizarlo tanto en la descarga individual como en la masiva.
  */
-export async function construirPdf(boletas, evento) {
+export async function construirPdf(boletas, config) {
   const doc = await PDFDocument.create();
-  doc.setTitle(`Boletas - ${limpiar(evento.nombre)}`);
+  doc.setTitle(`Boletas - ${limpiar(config.nombre)}`);
   doc.setProducer('Entradas Colegio Fontan');
 
   const negrita = await doc.embedFont(StandardFonts.HelveticaBold);
@@ -104,7 +104,7 @@ export async function construirPdf(boletas, evento) {
 
     // El nombre se ancla al borde inferior de la banda para que crezca hacia arriba
     // sin dejar un hueco cuando ocupa una sola linea.
-    const lineas = partirLineas(evento.nombre, negrita, 19, 264).slice(0, 2);
+    const lineas = partirLineas(config.nombre, negrita, 19, 264).slice(0, 2);
     lineas.forEach((linea, i) => {
       const y = 438 + (lineas.length - 1 - i) * 23;
       page.drawText(linea, { x: 34, y, size: 19, font: negrita, color: BLANCO });
@@ -133,7 +133,7 @@ export async function construirPdf(boletas, evento) {
       thickness: 1, color: rgb(0.89, 0.91, 0.94), dashArray: [3, 3],
     });
 
-    const pie = [evento.fecha, evento.lugar].filter(Boolean).map(limpiar);
+    const pie = [config.fecha, config.lugar].filter(Boolean).map(limpiar);
     pie.forEach((linea, i) => {
       centrado(page, linea, { font: normal, size: 9.5, y: 96 - i * 14, color: GRIS });
     });
@@ -149,7 +149,7 @@ export async function construirPdf(boletas, evento) {
   return doc;
 }
 
-export async function pdfBoleta(boleta, evento) {
-  const doc = await construirPdf([boleta], evento);
+export async function pdfBoleta(boleta, config) {
+  const doc = await construirPdf([boleta], config);
   return Buffer.from(await doc.save());
 }

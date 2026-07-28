@@ -58,33 +58,42 @@ Cambiar la contraseña cierra las sesiones abiertas de esa persona.
 
 ## Publicar en Vercel
 
-En Vercel el disco se borra en cada despliegue, así que la base de datos tiene
-que vivir fuera. Se usa **Turso**, que es SQLite alojado y tiene plan gratuito de
-sobra para esto.
+### Por qué hace falta una base aparte
 
-**1. Crear la base** en [turso.tech](https://turso.tech). Al crearla te da dos
-datos: la URL (`libsql://…`) y un token.
+En tu computador la app guarda todo en un archivo (`data/entradas.db`). Vercel no
+sirve para eso: cada despliegue arranca con el disco en blanco, así que un archivo
+guardado ahí desaparece. La información tiene que vivir en un servicio aparte.
 
-**2. Subir el repo a GitHub** e importarlo en Vercel.
+Se usa **Turso**: es el mismo SQLite de siempre, pero alojado en internet en vez
+de en un archivo tuyo. No hay que aprender nada nuevo — el código es idéntico,
+solo cambia a dónde apunta. Su plan gratuito da 500 millones de lecturas al mes;
+un evento del colegio usa unos pocos miles.
 
-**3. En Vercel → Settings → Environment Variables**, agregar:
+### Pasos
 
-| Variable | Valor |
-| --- | --- |
-| `TURSO_URL` | la URL `libsql://…` |
-| `TURSO_TOKEN` | el token |
+**1. Importar el repo en Vercel** (Add New → Project).
 
-**4. Desplegar.** Las tablas se crean solas la primera vez que alguien entra.
+**2. En el proyecto → pestaña Storage → Browse Marketplace → Turso.** Conectar una
+base crea sola las variables `TURSO_DATABASE_URL` y `TURSO_AUTH_TOKEN`, que es lo
+que la app busca. No hay que copiar tokens a mano.
 
-**5. Crear el usuario en la base de producción**, desde tu computador apuntando a
-Turso:
+**3. Redesplegar** (Deployments → … → Redeploy) para que tome las variables.
+Las tablas se crean solas la primera vez que alguien entra.
+
+**4. Crear el usuario en la base de producción.** Este es el paso que se olvida:
+sin él la app abre pero nadie puede entrar. Desde la carpeta del proyecto:
 
 ```bash
-TURSO_URL="libsql://…" TURSO_TOKEN="…" npm run usuario -- crear mama "la-contraseña"
+vercel env pull .env.produccion
+set -a && . ./.env.produccion && set +a && npm run usuario -- crear admincolegio 'la-contraseña'
 ```
 
-Sin esas variables el comando trabaja sobre el archivo local; con ellas, sobre la
-base real. Es el mismo comando para cambiar la contraseña después.
+`vercel env pull` baja las variables del proyecto (requiere `npm i -g vercel` y
+`vercel link` la primera vez). Sin variables, el comando trabaja sobre el archivo
+local; con ellas, sobre la base real. Es el mismo comando para cambiar la
+contraseña después.
+
+> El archivo `.env.produccion` trae el token: está en `.gitignore`, no lo subas.
 
 ### La cámara y el HTTPS
 

@@ -1,0 +1,92 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Evento · Boletas Colegio Fontán</title>
+  <link rel="stylesheet" href="/app.css">
+  <link rel="icon" href="data:,">
+</head>
+<body>
+  <header class="barra">
+    <div class="interior">
+      <a class="marca" href="/"><span class="logo">F</span><strong>Boletería Fontán</strong></a>
+      <nav>
+        <a href="/">Eventos</a>
+        <a href="/escanear">Escanear</a>
+        <button id="salir" class="texto">Salir</button>
+      </nav>
+    </div>
+  </header>
+
+  <main class="contenido pila">
+    <div>
+      <a href="/" class="mini">← Todos los eventos</a>
+      <h1 id="titulo" class="titulo-pagina">…</h1>
+      <p id="detalle" class="silencio"></p>
+    </div>
+
+    <section id="cifras" class="cifras"></section>
+
+    <section class="tarjeta">
+      <h2>Generar boletas</h2>
+      <p class="mini separa-abajo">
+        Cada boleta recibe un código único e irrepetible. Puedes generar varios lotes;
+        la numeración continúa donde quedó.
+      </p>
+      <form id="forma-lote" class="pila">
+        <div class="campos">
+          <div>
+            <label for="cantidad">Cantidad</label>
+            <input id="cantidad" type="number" min="1" max="500" value="50" required>
+          </div>
+          <div>
+            <label for="categoria">Categoría <span class="mini">(opcional)</span></label>
+            <input id="categoria" maxlength="40" placeholder="General, Adulto, Niño…">
+          </div>
+          <div>
+            <label for="nota">Nota interna <span class="mini">(no se imprime)</span></label>
+            <input id="nota" maxlength="120" placeholder="Lote 1 · curso 5B">
+          </div>
+        </div>
+        <div class="fila">
+          <button type="submit">Generar boletas</button>
+          <button type="button" id="descargar-todo" class="suave">Descargar todas (ZIP de PDFs)</button>
+        </div>
+      </form>
+    </section>
+
+    <section class="tarjeta">
+      <div class="fila separa-abajo">
+        <h2 class="crece">Boletas</h2>
+        <input id="buscar" class="campo-corto" placeholder="Buscar número o código" maxlength="40">
+        <select id="filtro" class="campo-corto">
+          <option value="">Todas</option>
+          <option value="disponible">Sin usar</option>
+          <option value="usada">Usadas</option>
+          <option value="anulada">Anuladas</option>
+        </select>
+      </div>
+
+      <div class="marco desplaza">
+        <table>
+          <thead>
+            <tr>
+              <th>N.º</th>
+              <th>Código</th>
+              <th>Categoría</th>
+              <th>Estado</th>
+              <th>Usada</th>
+              <th></th>
+            </tr>
+          </thead>
+          <tbody id="tabla"></tbody>
+        </table>
+      </div>
+      <p id="pie-tabla" class="mini separa-arriba"></p>
+    </section>
+  </main>
+
+  <script type="module" src="/evento.js"></script>
+</body>
+</html>

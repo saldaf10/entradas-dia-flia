@@ -1,0 +1,72 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Escanear · Boletas Colegio Fontán</title>
+  <link rel="stylesheet" href="/app.css">
+  <link rel="icon" href="data:,">
+</head>
+<body>
+  <header class="barra">
+    <div class="interior">
+      <a class="marca" href="/"><span class="logo">F</span><strong>Boletería Fontán</strong></a>
+      <nav>
+        <a href="/">Eventos</a>
+        <a href="/escanear">Escanear</a>
+        <button id="salir" class="texto">Salir</button>
+      </nav>
+    </div>
+  </header>
+
+  <main class="contenido pila">
+    <div>
+      <span class="etiqueta">Puerta</span>
+      <h1 class="titulo-pagina">Escanear boletas</h1>
+      <p class="silencio">Apunta la cámara al código QR de la boleta.</p>
+    </div>
+
+    <div class="escaner">
+      <div class="pila">
+        <div class="visor" id="visor">
+          <video id="video" playsinline muted></video>
+          <div class="mira oculto" id="mira"></div>
+          <p class="aviso" id="aviso-camara">La cámara está apagada.</p>
+        </div>
+        <div class="fila">
+          <button id="camara">Encender cámara</button>
+          <label class="interruptor">
+            <input type="checkbox" id="solo-consultar">
+            Solo consultar (no marcar como usada)
+          </label>
+        </div>
+      </div>
+
+      <div class="pila">
+        <div class="veredicto" id="veredicto">
+          <p class="mini">Esperando</p>
+          <p class="titulo">Sin escanear</p>
+          <p class="silencio" id="veredicto-detalle">El resultado aparecerá aquí.</p>
+        </div>
+
+        <div class="tarjeta plana">
+          <h3>Código a mano</h3>
+          <p class="mini separa-abajo">Si la cámara falla, escribe el código impreso en la boleta.</p>
+          <form id="forma-manual" class="fila">
+            <input id="manual" class="crece mono" placeholder="ABCD-EFGH-JKMN-PQRS" maxlength="30">
+            <button type="submit">Validar</button>
+          </form>
+        </div>
+
+        <div class="tarjeta plana">
+          <h3>Últimos escaneos</h3>
+          <ul class="registro" id="registro"></ul>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <script src="/vendor/jsqr.js"></script>
+  <script type="module" src="/escanear.js"></script>
+</body>
+</html>

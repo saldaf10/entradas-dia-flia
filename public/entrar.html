@@ -1,0 +1,38 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Entrar · Boletas Colegio Fontán</title>
+  <link rel="stylesheet" href="/app.css">
+  <link rel="icon" href="data:,">
+</head>
+<body class="pantalla-entrada">
+  <main class="caja-entrada">
+    <div class="tarjeta">
+      <div class="marca">
+        <span class="logo">F</span>
+        <strong>Colegio Fontán</strong>
+      </div>
+
+      <span class="etiqueta">Boletería</span>
+      <h1>Entradas</h1>
+      <p class="silencio sub">Genera y valida las boletas del evento.</p>
+
+      <form id="forma" class="pila" autocomplete="on">
+        <div>
+          <label for="usuario">Usuario</label>
+          <input id="usuario" name="username" autocomplete="username" required autofocus>
+        </div>
+        <div>
+          <label for="clave">Contraseña</label>
+          <input id="clave" name="password" type="password" autocomplete="current-password" required>
+        </div>
+        <p id="error" class="mini error-linea"></p>
+        <button id="boton" type="submit">Entrar</button>
+      </form>
+    </div>
+  </main>
+  <script type="module" src="/entrar.js"></script>
+</body>
+</html>

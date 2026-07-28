@@ -1,0 +1,58 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Eventos · Boletas Colegio Fontán</title>
+  <link rel="stylesheet" href="/app.css">
+  <link rel="icon" href="data:,">
+</head>
+<body>
+  <header class="barra">
+    <div class="interior">
+      <a class="marca" href="/"><span class="logo">F</span><strong>Boletería Fontán</strong></a>
+      <nav>
+        <a href="/">Eventos</a>
+        <a href="/escanear">Escanear</a>
+        <button id="salir" class="texto">Salir</button>
+      </nav>
+    </div>
+  </header>
+
+  <main class="contenido pila">
+    <div>
+      <span class="etiqueta">Boletería</span>
+      <h1 class="titulo-pagina">Eventos</h1>
+      <p class="silencio">Cada evento tiene su propia numeración de boletas.</p>
+    </div>
+
+    <section class="tarjeta">
+      <h2>Nuevo evento</h2>
+      <p class="mini separa-abajo">El nombre aparece impreso en la boleta.</p>
+      <form id="forma-evento" class="pila">
+        <div class="campos">
+          <div>
+            <label for="nombre">Nombre del evento</label>
+            <input id="nombre" required maxlength="90" placeholder="Día de la Familia 2026">
+          </div>
+          <div>
+            <label for="fecha">Fecha <span class="mini">(opcional)</span></label>
+            <input id="fecha" maxlength="60" placeholder="Sábado 15 de agosto, 9:00 a.m.">
+          </div>
+          <div>
+            <label for="lugar">Lugar <span class="mini">(opcional)</span></label>
+            <input id="lugar" maxlength="90" placeholder="Sede campestre">
+          </div>
+        </div>
+        <div class="fila">
+          <button type="submit">Crear evento</button>
+        </div>
+      </form>
+    </section>
+
+    <section id="lista" class="eventos"></section>
+  </main>
+
+  <script type="module" src="/panel.js"></script>
+</body>
+</html>

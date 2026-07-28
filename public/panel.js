@@ -71,7 +71,6 @@ function filaBoleta(b) {
     <tr class="${b.estado}">
       <td><strong>${String(b.numero).padStart(4, '0')}</strong></td>
       <td class="mono mini">${esc(b.codigo_legible)}</td>
-      <td>${esc(b.categoria)}</td>
       <td><span class="pastilla ${b.estado}">${b.estado === 'disponible' ? 'sin usar' : b.estado}</span></td>
       <td class="mini fecha">${b.usada_en ? fechaHora(b.usada_en) : '—'}</td>
       <td>
@@ -97,7 +96,7 @@ async function cargarBoletas() {
   pintarCifras(resumen);
 
   if (!boletas.length) {
-    tabla.innerHTML = `<tr><td colspan="6" class="vacio">
+    tabla.innerHTML = `<tr><td colspan="5" class="vacio">
       ${resumen.total ? 'Ninguna boleta coincide con el filtro.' : 'Todavía no has generado boletas. Usa el Paso 1 aquí arriba.'}
     </td></tr>`;
     pieTabla.textContent = '';
@@ -141,11 +140,7 @@ document.getElementById('forma-lote').addEventListener('submit', async (ev) => {
 
   try {
     const { creadas, desde, hasta } = await api('/boletas', {
-      cuerpo: {
-        cantidad: Number(document.getElementById('cantidad').value),
-        categoria: document.getElementById('categoria').value,
-        nota: document.getElementById('nota').value,
-      },
+      cuerpo: { cantidad: Number(document.getElementById('cantidad').value) },
     });
     aviso(`${creadas} boleta(s) generadas.`);
     await cargarBoletas();

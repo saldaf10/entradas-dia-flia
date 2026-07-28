@@ -26,7 +26,8 @@ Puedes generar varios lotes; la numeración continúa donde quedó.
 **Escanear** (`/escanear`) — para la puerta el día del evento. Apunta la cámara al
 QR y sale en grande si el ingreso está autorizado o si la boleta ya se usó.
 
-- **Solo consultar**: revisa una boleta sin marcarla como usada.
+- **Solo consultar**: revisa una boleta sin marcarla como usada. En «Últimos
+  escaneos» cada línea dice si fue **ingreso** o **consulta**.
 - **Código a mano**: si la cámara falla, se escribe el código impreso bajo el QR.
   Acepta minúsculas, con o sin guiones.
 

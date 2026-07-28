@@ -69,9 +69,7 @@ const ESQUEMA = [
      id         INTEGER PRIMARY KEY,
      codigo     TEXT NOT NULL UNIQUE,
      numero     INTEGER NOT NULL,
-     categoria  TEXT NOT NULL DEFAULT 'General',
      estado     TEXT NOT NULL DEFAULT 'disponible',
-     nota       TEXT,
      creada_en  TEXT NOT NULL,
      usada_en   TEXT,
      anulada_en TEXT
@@ -83,11 +81,26 @@ const ESQUEMA = [
      boleta_id  INTEGER,
      codigo     TEXT NOT NULL,
      resultado  TEXT NOT NULL,
+     modo       TEXT NOT NULL DEFAULT 'uso',
      usuario_id INTEGER,
      en         TEXT NOT NULL
    )`,
   `CREATE INDEX IF NOT EXISTS idx_escaneos_en ON escaneos(en DESC)`,
 ];
+
+/** Columnas agregadas despues, para bases que ya existian. */
+const COLUMNAS_NUEVAS = [
+  { tabla: 'escaneos', columna: 'modo', definicion: `TEXT NOT NULL DEFAULT 'uso'` },
+];
+
+async function migrar() {
+  for (const { tabla, columna, definicion } of COLUMNAS_NUEVAS) {
+    const info = await db.execute(`SELECT name FROM pragma_table_info('${tabla}')`);
+    if (!info.rows.some((f) => f.name === columna)) {
+      await db.execute(`ALTER TABLE ${tabla} ADD COLUMN ${columna} ${definicion}`);
+    }
+  }
+}
 
 let preparando = null;
 
@@ -98,6 +111,7 @@ let preparando = null;
 export function listo() {
   preparando ??= (async () => {
     for (const sentencia of ESQUEMA) await db.execute(sentencia);
+    await migrar();
   })();
   return preparando;
 }

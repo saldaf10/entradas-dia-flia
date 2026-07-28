@@ -9,7 +9,6 @@ const TINTA = rgb(0x0f / 255, 0x17 / 255, 0x2a / 255);
 const GRIS = rgb(0x64 / 255, 0x74 / 255, 0x8b / 255);
 const FONDO = rgb(0xf1 / 255, 0xf5 / 255, 0xf9 / 255);
 const BLANCO = rgb(1, 1, 1);
-const VIOLETA_SUAVE = rgb(0xf3 / 255, 0xe9 / 255, 0xf9 / 255);
 
 const ANCHO = 340;
 const ALTO = 540;
@@ -111,21 +110,14 @@ export async function construirPdf(boletas, config) {
     });
 
     centrado(page, `BOLETA N.\xBA ${String(boleta.numero).padStart(4, '0')}`, {
-      font: negrita, size: 15, y: 384, color: VIOLETA,
+      font: negrita, size: 15, y: 380, color: VIOLETA,
     });
-
-    const cat = espaciado(boleta.categoria || 'General').toUpperCase();
-    const anchoCat = normal.widthOfTextAtSize(cat, 7.5);
-    tarjeta(page, {
-      x: (ANCHO - anchoCat - 24) / 2, y: 356, w: anchoCat + 24, h: 18, r: 9, color: VIOLETA_SUAVE,
-    });
-    centrado(page, cat, { font: normal, size: 7.5, y: 361.5, color: VIOLETA });
 
     const png = await doc.embedPng(await qrPng(boleta.codigo));
-    page.drawImage(png, { x: (ANCHO - 180) / 2, y: 152, width: 180, height: 180 });
+    page.drawImage(png, { x: (ANCHO - 190) / 2, y: 150, width: 190, height: 190 });
 
     centrado(page, formatear(boleta.codigo), {
-      font: mono, size: 10.5, y: 132, color: TINTA,
+      font: mono, size: 10.5, y: 130, color: TINTA,
     });
 
     page.drawLine({

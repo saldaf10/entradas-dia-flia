@@ -62,19 +62,9 @@
         automáticamente un PDF por boleta, listo para enviar a cada comprador.
       </p>
       <form id="forma-lote" class="pila">
-        <div class="campos">
-          <div>
-            <label for="cantidad">¿Cuántas boletas?</label>
-            <input id="cantidad" type="number" min="1" max="500" value="50" required>
-          </div>
-          <div>
-            <label for="categoria">Categoría <span class="mini">(opcional)</span></label>
-            <input id="categoria" maxlength="40" placeholder="General, Adulto, Niño…">
-          </div>
-          <div>
-            <label for="nota">Nota interna <span class="mini">(no se imprime)</span></label>
-            <input id="nota" maxlength="120" placeholder="Lote 1 · curso 5B">
-          </div>
+        <div class="campo-solo">
+          <label for="cantidad">¿Cuántas boletas?</label>
+          <input id="cantidad" type="number" min="1" max="500" value="50" required>
         </div>
         <div class="fila">
           <button type="submit" id="generar">Generar boletas y descargar</button>
@@ -102,7 +92,6 @@
             <tr>
               <th>N.º</th>
               <th>Código</th>
-              <th>Categoría</th>
               <th>Estado</th>
               <th>Usada</th>
               <th></th>

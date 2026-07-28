@@ -54,16 +54,28 @@ function mostrar(datos) {
     <p class="mini">${esc(numero)}</p>
     <p class="titulo">${TITULOS[datos.resultado] || datos.resultado}</p>
     <p class="silencio">${esc(datos.mensaje)}</p>
-    ${datos.boleta ? `<p class="mini mono separa-arriba">${esc(datos.boleta.codigo_legible)} · ${esc(datos.boleta.categoria)}</p>` : ''}`;
+    ${datos.boleta ? `<p class="mini mono separa-arriba">${esc(datos.boleta.codigo_legible)}</p>` : ''}`;
   pitar(datos.resultado);
+}
+
+/** Fila del historial: numero, si fue consulta o ingreso, y la hora. */
+function lineaRegistro({ resultado, modo, numero, en }) {
+  const consulta = modo === 'consulta';
+  return `
+    <span class="punto ${esc(resultado)}"></span>
+    <span class="crece">${numero ? `N.º ${String(numero).padStart(4, '0')}` : 'Código desconocido'}</span>
+    <span class="modo ${consulta ? 'consulta' : 'uso'}">${consulta ? 'consulta' : 'ingreso'}</span>
+    <span class="mini">${hora(en)}</span>`;
 }
 
 function anotar(datos) {
   const li = document.createElement('li');
-  li.innerHTML = `
-    <span class="punto ${datos.resultado}"></span>
-    <span class="crece">${datos.boleta ? `N.º ${String(datos.boleta.numero).padStart(4, '0')}` : 'Código desconocido'}</span>
-    <span class="mini">${hora(new Date().toISOString())}</span>`;
+  li.innerHTML = lineaRegistro({
+    resultado: datos.resultado,
+    modo: datos.modo,
+    numero: datos.boleta?.numero,
+    en: new Date().toISOString(),
+  });
   registro.prepend(li);
   while (registro.children.length > 30) registro.lastElementChild.remove();
 }
@@ -190,14 +202,6 @@ document.getElementById('forma-manual').addEventListener('submit', async (ev) =>
 
 api('/escaneos?limite=20')
   .then(({ escaneos }) => {
-    registro.innerHTML = escaneos
-      .map(
-        (e) => `<li>
-          <span class="punto ${esc(e.resultado)}"></span>
-          <span class="crece">${e.numero ? `N.º ${String(e.numero).padStart(4, '0')}` : 'Código desconocido'}</span>
-          <span class="mini">${hora(e.en)}</span>
-        </li>`
-      )
-      .join('');
+    registro.innerHTML = escaneos.map((e) => `<li>${lineaRegistro(e)}</li>`).join('');
   })
   .catch(() => {});

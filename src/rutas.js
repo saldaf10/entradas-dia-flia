@@ -116,9 +116,6 @@ api.post('/boletas', async (req, res, next) => {
     if (!Number.isInteger(cantidad) || cantidad < 1 || cantidad > MAX_POR_LOTE) {
       return res.status(400).json({ error: `La cantidad debe ir entre 1 y ${MAX_POR_LOTE}` });
     }
-    const categoria = texto(req.body?.categoria, 40) || 'General';
-    const nota = texto(req.body?.nota, 120) || null;
-
     const { n: ultimo } = await fila('SELECT COALESCE(MAX(numero), 0) AS n FROM boletas');
     const desde = Number(ultimo) + 1;
     const t = ahora();
@@ -131,9 +128,8 @@ api.post('/boletas', async (req, res, next) => {
       while (usados.has(codigo)) codigo = nuevoCodigo();
       usados.add(codigo);
       sentencias.push({
-        sql: `INSERT INTO boletas (codigo, numero, categoria, nota, creada_en)
-              VALUES (?, ?, ?, ?, ?)`,
-        args: [codigo, desde + i, categoria, nota, t],
+        sql: 'INSERT INTO boletas (codigo, numero, creada_en) VALUES (?, ?, ?)',
+        args: [codigo, desde + i, t],
       });
     }
 
@@ -247,9 +243,12 @@ api.post('/validar', async (req, res, next) => {
     const codigo = normalizar(texto(req.body?.codigo, 60));
     const soloConsultar = Boolean(req.body?.consultar);
 
+    const modo = soloConsultar ? 'consulta' : 'uso';
     const registrar = (boletaId, resultado) =>
-      ejecutar('INSERT INTO escaneos (boleta_id, codigo, resultado, usuario_id, en) VALUES (?, ?, ?, ?, ?)',
-        [boletaId, codigo || '(vacio)', resultado, req.usuario.id, ahora()]);
+      ejecutar(
+        'INSERT INTO escaneos (boleta_id, codigo, resultado, modo, usuario_id, en) VALUES (?, ?, ?, ?, ?, ?)',
+        [boletaId, codigo || '(vacio)', resultado, modo, req.usuario.id, ahora()]
+      );
 
     if (!esCodigoValido(codigo)) {
       await registrar(null, 'invalida');
@@ -267,6 +266,7 @@ api.post('/validar', async (req, res, next) => {
       const actual = await fila('SELECT * FROM boletas WHERE id = ?', [boleta.id]);
       res.json({
         resultado,
+        modo,
         mensaje,
         boleta: { ...actual, codigo_legible: formatear(actual.codigo) },
       });
@@ -301,7 +301,7 @@ api.get('/escaneos', async (req, res, next) => {
   try {
     const limite = Math.min(Math.max(Number(req.query.limite) || 25, 1), 200);
     const registros = await filas(
-      `SELECT e.*, b.numero, b.categoria
+      `SELECT e.*, b.numero
        FROM escaneos e LEFT JOIN boletas b ON b.id = e.boleta_id
        ORDER BY e.id DESC LIMIT ?`,
       [limite]

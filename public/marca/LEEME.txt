@@ -1,21 +1,24 @@
 Recursos de marca de la boleta
 ==============================
 
-Deja aqui estos archivos y la boleta los toma sola. No hay que tocar codigo.
+  logo.png
+      El logo que se imprime arriba de la boleta. Lo genera "npm run marca".
 
-  logo.png  (o logo.jpg)
-      El logo que se imprime arriba de la boleta.
-      Ideal: fondo transparente, ancho unas 3 veces el alto, minimo 700 px
-      de ancho para que no se vea pixelado.
-      Si no esta, la boleta escribe "COLEGIO FONTAN" en texto.
+  <lo-que-sea>.png
+      El logo tal como venga del manual de marca, con el nombre que sea.
+      Corre despues:
 
-  <lo-que-sea>.ttf  /  <lo-que-sea>.otf
-      La tipografia del evento (por ejemplo Neulis Sans).
-      Si un archivo lleva "bold" o "semibold" en el nombre, se usa para los
-      titulos y el otro para el texto corriente.
-      Si no hay ninguna, la boleta usa Helvetica.
+          npm run marca
 
-Despues de agregarlos:
+      Eso recorta los margenes transparentes y escribe logo.png. Hace falta
+      porque los archivos del manual traen el logo pequeno en el centro de una
+      lamina enorme, y sin recortar sale diminuto en la boleta.
+
+  <lo-que-sea>.ttf  /  <lo-que-sea>.otf   (opcional)
+      La tipografia del evento. Si el nombre lleva "bold" o "semibold" se usa
+      para los titulos. Si no hay ninguna, la boleta usa Helvetica.
+
+Despues de agregar o cambiar algo:
   - en local, reinicia el servidor (Ctrl+C y "npm start")
   - para Vercel, haz commit y push: los archivos viajan con el despliegue
 

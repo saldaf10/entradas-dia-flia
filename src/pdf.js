@@ -16,9 +16,9 @@ const ANCHO = 340;
 const ALTO = 540;
 
 // Caja donde se encaja el logo, respetando su proporcion.
-const LOGO_ANCHO = 176;
-const LOGO_ALTO = 54;
-const LOGO_TOPE = 492;
+const LOGO_ANCHO = 200;
+const LOGO_ALTO = 66;
+const LOGO_TOPE = 496;
 
 /**
  * Con las fuentes estandar de PDF (WinAnsi) cualquier caracter fuera de
@@ -111,15 +111,15 @@ export async function construirPdf(boletas, config) {
       });
     }
 
-    page.drawRectangle({ x: (ANCHO - 46) / 2, y: 424, width: 46, height: 3, color: CIAN });
+    page.drawRectangle({ x: (ANCHO - 46) / 2, y: 418, width: 46, height: 3, color: CIAN });
 
     // ---- nombre del evento y cuando
     const lineas = partirLineas(txt(config.nombre), negrita, 21, 260).slice(0, 2);
     lineas.forEach((linea, i) => {
-      centrado(page, linea, { font: negrita, size: 21, y: 398 - i * 24, color: VIOLETA });
+      centrado(page, linea, { font: negrita, size: 21, y: 392 - i * 24, color: VIOLETA });
     });
 
-    let y = 398 - lineas.length * 24 - 2;
+    let y = 392 - lineas.length * 24 - 2;
     for (const linea of [config.fecha, config.lugar].filter(Boolean).map(txt)) {
       centrado(page, linea, { font: normal, size: 10.5, y, color: GRIS });
       y -= 15;

@@ -1,6 +1,8 @@
 import { PDFDocument, StandardFonts, rgb } from 'pdf-lib';
+import fontkit from '@pdf-lib/fontkit';
 import QRCode from 'qrcode';
 import { formatear } from './codigos.js';
+import { logo, fuentes } from './marca.js';
 
 // Identidad Colegio Fontan
 const VIOLETA = rgb(0x50 / 255, 0x00 / 255, 0x7d / 255);
@@ -13,27 +15,26 @@ const BLANCO = rgb(1, 1, 1);
 const ANCHO = 340;
 const ALTO = 540;
 
+// Caja donde se encaja el logo, respetando su proporcion.
+const LOGO_ANCHO = 176;
+const LOGO_ALTO = 54;
+const LOGO_TOPE = 492;
+
 /**
- * Las fuentes estandar de PDF usan WinAnsi: cualquier caracter fuera de Latin-1
- * (emojis, comillas tipograficas) haria fallar drawText. El nombre del evento lo
- * escribe una persona, asi que se limpia antes de dibujar.
+ * Con las fuentes estandar de PDF (WinAnsi) cualquier caracter fuera de
+ * Latin-1 haria fallar drawText. Una fuente propia embebida si los admite,
+ * asi que solo se limpia cuando hace falta.
  */
-function limpiar(texto) {
-  return String(texto ?? '')
+function limpiar(texto, propia) {
+  const base = String(texto ?? '')
     .replace(/[‘’]/g, "'")
     .replace(/[“”]/g, '"')
-    .replace(/[–—]/g, '-')
-    .replace(/[^\x20-\x7E\xA1-\xFF]/g, '')
-    .trim();
-}
-
-/** Imita el tracking amplio de los titulillos del sitio. */
-function espaciado(texto) {
-  return limpiar(texto).split('').join(' ');
+    .replace(/[–—]/g, '-');
+  return (propia ? base : base.replace(/[^\x20-\x7E\xA1-\xFF]/g, '')).trim();
 }
 
 function partirLineas(texto, font, tam, anchoMax) {
-  const palabras = limpiar(texto).split(/\s+/).filter(Boolean);
+  const palabras = texto.split(/\s+/).filter(Boolean);
   const lineas = [];
   let actual = '';
   for (const palabra of palabras) {
@@ -46,12 +47,6 @@ function partirLineas(texto, font, tam, anchoMax) {
   }
   if (actual) lineas.push(actual);
   return lineas;
-}
-
-function centrado(page, texto, { font, size, y, color }) {
-  const limpio = limpiar(texto);
-  const x = (ANCHO - font.widthOfTextAtSize(limpio, size)) / 2;
-  page.drawText(limpio, { x, y, size, font, color });
 }
 
 /** Rectangulo con esquinas redondeadas (drawSvgPath dibuja con el eje Y invertido). */
@@ -73,18 +68,30 @@ async function qrPng(codigo) {
   });
 }
 
-/**
- * Dibuja una boleta por pagina. Devuelve el PDFDocument para poder
- * reutilizarlo tanto en la descarga individual como en la masiva.
- */
 export async function construirPdf(boletas, config) {
   const doc = await PDFDocument.create();
-  doc.setTitle(`Boletas - ${limpiar(config.nombre)}`);
+  doc.registerFontkit(fontkit);
+
+  const propia = Boolean(fuentes);
+  const negrita = propia
+    ? await doc.embedFont(fuentes.negrita, { subset: true })
+    : await doc.embedFont(StandardFonts.HelveticaBold);
+  const normal = propia
+    ? await doc.embedFont(fuentes.normal, { subset: true })
+    : await doc.embedFont(StandardFonts.Helvetica);
+  const mono = await doc.embedFont(StandardFonts.Courier);
+
+  const txt = (v) => limpiar(v, propia);
+  const centrado = (page, texto, { font, size, y, color }) => {
+    page.drawText(texto, { x: (ANCHO - font.widthOfTextAtSize(texto, size)) / 2, y, size, font, color });
+  };
+
+  doc.setTitle(`Boletas - ${txt(config.nombre)}`);
   doc.setProducer('Entradas Colegio Fontan');
 
-  const negrita = await doc.embedFont(StandardFonts.HelveticaBold);
-  const normal = await doc.embedFont(StandardFonts.Helvetica);
-  const mono = await doc.embedFont(StandardFonts.Courier);
+  const marca = logo
+    ? await (logo.esPng ? doc.embedPng(logo.datos) : doc.embedJpg(logo.datos))
+    : null;
 
   for (const boleta of boletas) {
     const page = doc.addPage([ANCHO, ALTO]);
@@ -92,50 +99,54 @@ export async function construirPdf(boletas, config) {
     page.drawRectangle({ x: 0, y: 0, width: ANCHO, height: ALTO, color: FONDO });
     tarjeta(page, { x: 14, y: 14, w: 312, h: 512, r: 26, color: BLANCO });
 
-    // Cabecera violeta: rectangulo redondeado + relleno recto para cuadrar el borde inferior.
-    tarjeta(page, { x: 14, y: 418, w: 312, h: 108, r: 26, color: VIOLETA });
-    page.drawRectangle({ x: 14, y: 418, width: 312, height: 40, color: VIOLETA });
-    page.drawRectangle({ x: 14, y: 414, width: 312, height: 4, color: CIAN });
+    // ---- logo, encajado en su caja sin deformarse
+    if (marca) {
+      const escala = Math.min(LOGO_ANCHO / marca.width, LOGO_ALTO / marca.height);
+      const w = marca.width * escala;
+      const h = marca.height * escala;
+      page.drawImage(marca, { x: (ANCHO - w) / 2, y: LOGO_TOPE - h, width: w, height: h });
+    } else {
+      centrado(page, txt('COLEGIO FONTAN').split('').join(' '), {
+        font: negrita, size: 9, y: LOGO_TOPE - 26, color: VIOLETA,
+      });
+    }
 
-    page.drawText(espaciado('COLEGIO FONTÁN'), {
-      x: 34, y: 488, size: 7.5, font: negrita, color: CIAN,
-    });
+    page.drawRectangle({ x: (ANCHO - 46) / 2, y: 424, width: 46, height: 3, color: CIAN });
 
-    // El nombre se ancla al borde inferior de la banda para que crezca hacia arriba
-    // sin dejar un hueco cuando ocupa una sola linea.
-    const lineas = partirLineas(config.nombre, negrita, 19, 264).slice(0, 2);
+    // ---- nombre del evento y cuando
+    const lineas = partirLineas(txt(config.nombre), negrita, 21, 260).slice(0, 2);
     lineas.forEach((linea, i) => {
-      const y = 438 + (lineas.length - 1 - i) * 23;
-      page.drawText(linea, { x: 34, y, size: 19, font: negrita, color: BLANCO });
+      centrado(page, linea, { font: negrita, size: 21, y: 398 - i * 24, color: VIOLETA });
     });
+
+    let y = 398 - lineas.length * 24 - 2;
+    for (const linea of [config.fecha, config.lugar].filter(Boolean).map(txt)) {
+      centrado(page, linea, { font: normal, size: 10.5, y, color: GRIS });
+      y -= 15;
+    }
+
+    // ---- codigo
+    const png = await doc.embedPng(await qrPng(boleta.codigo));
+    page.drawImage(png, { x: (ANCHO - 190) / 2, y: 152, width: 190, height: 190 });
+
+    centrado(page, formatear(boleta.codigo), { font: mono, size: 10.5, y: 133, color: TINTA });
+
+    // ---- franja violeta inferior con el numero de boleta
+    tarjeta(page, { x: 14, y: 14, w: 312, h: 98, r: 26, color: VIOLETA });
+    page.drawRectangle({ x: 14, y: 78, width: 312, height: 34, color: VIOLETA });
+    page.drawRectangle({ x: 14, y: 109, width: 312, height: 3, color: CIAN });
 
     centrado(page, `BOLETA N.\xBA ${String(boleta.numero).padStart(4, '0')}`, {
-      font: negrita, size: 15, y: 380, color: VIOLETA,
+      font: negrita, size: 17, y: 68, color: BLANCO,
     });
-
-    const png = await doc.embedPng(await qrPng(boleta.codigo));
-    page.drawImage(png, { x: (ANCHO - 190) / 2, y: 150, width: 190, height: 190 });
-
-    centrado(page, formatear(boleta.codigo), {
-      font: mono, size: 10.5, y: 130, color: TINTA,
-    });
-
-    page.drawLine({
-      start: { x: 50, y: 116 }, end: { x: ANCHO - 50, y: 116 },
-      thickness: 1, color: rgb(0.89, 0.91, 0.94), dashArray: [3, 3],
-    });
-
-    const pie = [config.fecha, config.lugar].filter(Boolean).map(limpiar);
-    pie.forEach((linea, i) => {
-      centrado(page, linea, { font: normal, size: 9.5, y: 96 - i * 14, color: GRIS });
-    });
-
-    centrado(page, 'Presenta este código en la entrada.', {
-      font: normal, size: 8, y: 56, color: GRIS,
-    });
-    centrado(page, 'Válido para un solo ingreso.', {
-      font: normal, size: 8, y: 44, color: GRIS,
-    });
+    // Blanco atenuado en vez de cian: el cian sobre violeta vibra al imprimir.
+    for (const [i, linea] of ['Presenta este código en la entrada', 'Válido para un solo ingreso'].entries()) {
+      const limpio = txt(linea);
+      page.drawText(limpio, {
+        x: (ANCHO - normal.widthOfTextAtSize(limpio, 8.5)) / 2,
+        y: 48 - i * 13, size: 8.5, font: normal, color: BLANCO, opacity: 0.72,
+      });
+    }
   }
 
   return doc;

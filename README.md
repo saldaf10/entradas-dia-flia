@@ -33,6 +33,23 @@ QR y sale en grande si el ingreso está autorizado o si la boleta ya se usó.
 
 ---
 
+## El logo y la tipografía de la boleta
+
+Van en `public/marca/` y la boleta los toma sola, sin tocar código:
+
+| Archivo | Para qué |
+| --- | --- |
+| `logo.png` (o `.jpg`) | El logo impreso arriba de la boleta. Fondo transparente, mínimo 700 px de ancho. |
+| cualquier `.ttf` / `.otf` | La tipografía del evento. Si el nombre lleva *bold* o *semibold* se usa para los títulos. |
+
+Si falta alguno, la boleta funciona igual: escribe «COLEGIO FONTÁN» en texto y usa
+Helvetica. Al arrancar, la terminal dice cuáles encontró.
+
+Para que lleguen a Vercel hay que hacerles commit y push: viajan con el
+despliegue, no se suben desde la interfaz.
+
+---
+
 ## Correr en el computador
 
 Requiere **Node 22.5 o superior**.

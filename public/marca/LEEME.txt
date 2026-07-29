@@ -1,0 +1,22 @@
+Recursos de marca de la boleta
+==============================
+
+Deja aqui estos archivos y la boleta los toma sola. No hay que tocar codigo.
+
+  logo.png  (o logo.jpg)
+      El logo que se imprime arriba de la boleta.
+      Ideal: fondo transparente, ancho unas 3 veces el alto, minimo 700 px
+      de ancho para que no se vea pixelado.
+      Si no esta, la boleta escribe "COLEGIO FONTAN" en texto.
+
+  <lo-que-sea>.ttf  /  <lo-que-sea>.otf
+      La tipografia del evento (por ejemplo Neulis Sans).
+      Si un archivo lleva "bold" o "semibold" en el nombre, se usa para los
+      titulos y el otro para el texto corriente.
+      Si no hay ninguna, la boleta usa Helvetica.
+
+Despues de agregarlos:
+  - en local, reinicia el servidor (Ctrl+C y "npm start")
+  - para Vercel, haz commit y push: los archivos viajan con el despliegue
+
+Al arrancar, el servidor dice en la terminal si encontro logo y tipografia.

@@ -14,8 +14,8 @@ app.listen(puerto, () => {
   console.log(`  Base de datos: ${esRemota ? 'Turso (remota)' : 'archivo local'}`);
 
   const marca = resumenMarca();
-  console.log(`  Logo en la boleta: ${marca.logo ? 'si' : 'no (falta public/marca/logo.png)'}`);
-  console.log(`  Tipografia: ${marca.fuente}\n`);
+  console.log(`  Logo en la boleta: ${marca.logo ?? 'no (falta public/marca/logo.png)'}`);
+  console.log(`  Tipografia: ${marca.fuente ?? 'NINGUNA - la boleta saldria sin texto'}\n`);
 
   fila('SELECT COUNT(*) AS n FROM usuarios').then(({ n }) => {
     if (!Number(n)) {

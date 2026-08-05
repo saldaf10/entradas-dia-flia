@@ -2,7 +2,7 @@ import express from 'express';
 import archiver from 'archiver';
 import { db, filas, fila, ejecutar, ahora } from './db.js';
 import { nuevoCodigo, normalizar, esCodigoValido, formatear } from './codigos.js';
-import { pdfBoleta } from './pdf.js';
+import { pngBoleta } from './imagen.js';
 import {
   COOKIE, verificar, abrirSesion, cerrarSesion,
   exigirSesion, limitarIntentos, reiniciarIntentos,
@@ -11,8 +11,12 @@ import {
 export const api = express.Router();
 
 const MAX_POR_LOTE = 500;
-/** Tope por ZIP: en Vercel una funcion tiene tiempo y tamano de respuesta limitados. */
-export const MAX_POR_ZIP = 200;
+/**
+ * Tope por ZIP. Vercel corta las respuestas en 4.5 MB salvo que vayan en
+ * streaming; el ZIP va en streaming, pero 75 boletas (~4 MB) entran holgadas
+ * aunque la plataforma decidiera almacenarlo en bufer.
+ */
+export const MAX_POR_ZIP = 75;
 const enProduccion = process.env.NODE_ENV === 'production';
 
 function texto(valor, max = 120) {
@@ -185,17 +189,17 @@ api.post('/boletas/:id/estado', async (req, res, next) => {
 
 // ---------------------------------------------------------------- descargas
 
-api.get('/boletas/:id/pdf', async (req, res, next) => {
+api.get('/boletas/:id/png', async (req, res, next) => {
   try {
     const boleta = await fila('SELECT * FROM boletas WHERE id = ?', [Number(req.params.id)]);
     if (!boleta) return res.status(404).json({ error: 'Boleta no encontrada' });
 
     const config = await leerConfig();
-    const pdf = await pdfBoleta(boleta, config);
-    const nombre = `${nombreArchivo(config.nombre)}-boleta-${String(boleta.numero).padStart(4, '0')}.pdf`;
-    res.setHeader('Content-Type', 'application/pdf');
+    const imagen = await pngBoleta(boleta, config);
+    const nombre = `${nombreArchivo(config.nombre)}-boleta-${String(boleta.numero).padStart(4, '0')}.png`;
+    res.setHeader('Content-Type', 'image/png');
     res.setHeader('Content-Disposition', `attachment; filename="${nombre}"`);
-    res.send(pdf);
+    res.send(imagen);
   } catch (err) { next(err); }
 });
 
@@ -224,10 +228,10 @@ api.get('/descargar', async (req, res, next) => {
     zip.on('error', next);
     zip.pipe(res);
 
-    // Un PDF por boleta: cada archivo se manda tal cual a su comprador.
+    // Una imagen por boleta: cada archivo se manda tal cual a su comprador.
     for (const [i, boleta] of boletas.entries()) {
-      const pdf = await pdfBoleta(boleta, config);
-      zip.append(pdf, { name: `${base}-boleta-${String(boleta.numero).padStart(4, '0')}.pdf` });
+      const imagen = await pngBoleta(boleta, config);
+      zip.append(imagen, { name: `${base}-boleta-${String(boleta.numero).padStart(4, '0')}.png` });
       // Ceder el hilo evita que se congele la validacion en la puerta
       // mientras alguien esta descargando un lote grande.
       if (i % 10 === 9) await new Promise((listo) => setImmediate(listo));

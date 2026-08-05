@@ -1,7 +1,7 @@
 # Entradas · Colegio Fontán
 
 Boletas con código QR para los eventos del colegio. Una sola persona entra con
-usuario y contraseña, genera las boletas, descarga un PDF por boleta para
+usuario y contraseña, genera las boletas, descarga una imagen PNG por boleta para
 enviárselo a cada comprador, y en la puerta escanea los QR desde el celular para
 saber cuáles ya se usaron.
 
@@ -17,9 +17,9 @@ la misma pantalla principal y son los que salen impresos en la boleta.
 **Boletas** (`/`) — es la pantalla principal y ahí mismo está el generador:
 
 1. *Generar códigos QR* → escribe cuántas boletas y presiona **Generar boletas y
-   descargar**. Al terminar bajan solas, en ZIP, con un PDF por boleta.
+   descargar**. Al terminar bajan solas, en ZIP, con una imagen PNG por boleta.
 2. Abajo queda la lista de todas las boletas emitidas, con su estado. Desde ahí
-   puedes bajar el PDF de una sola boleta o anularla.
+   puedes bajar el PNG de una sola boleta o anularla.
 
 Puedes generar varios lotes; la numeración continúa donde quedó.
 
@@ -39,11 +39,11 @@ Van en `public/marca/` y la boleta los toma sola, sin tocar código:
 
 | Archivo | Para qué |
 | --- | --- |
-| `logo.png` (o `.jpg`) | El logo impreso arriba de la boleta. Fondo transparente, mínimo 700 px de ancho. |
-| cualquier `.ttf` / `.otf` | La tipografía del evento. Si el nombre lleva *bold* o *semibold* se usa para los títulos. |
+| `logo.png` | El logo impreso arriba de la boleta. Lo genera `npm run marca` a partir de cualquier PNG que dejes ahí, recortándole los márgenes transparentes. |
+| `fuentes/*.ttf` | La tipografía. **No es opcional**: la boleta es una imagen y el rasterizador no dibuja texto sin un archivo de fuente. Vienen Inter Regular y Bold (licencia OFL). |
 
-Si falta alguno, la boleta funciona igual: escribe «COLEGIO FONTÁN» en texto y usa
-Helvetica. Al arrancar, la terminal dice cuáles encontró.
+Si falta el logo, la boleta funciona igual y escribe «COLEGIO FONTÁN» en texto.
+Al arrancar, la terminal dice cuáles encontró.
 
 Para que lleguen a Vercel hay que hacerles commit y push: viajan con el
 despliegue, no se suben desde la interfaz.
@@ -122,7 +122,7 @@ lo avisa y queda disponible el campo de código a mano.
 ### Por qué las descargas grandes vienen partidas
 
 Una función de Vercel tiene límite de tiempo y de tamaño de respuesta, así que
-cada ZIP trae máximo **200 boletas**. Si generas 500, bajan tres archivos seguidos
+cada ZIP trae máximo **75 boletas**. Si generas 500, bajan siete archivos seguidos
 y la pantalla te va diciendo por cuál va. No hay que hacer nada especial.
 
 ---
@@ -174,6 +174,6 @@ src/db.js         Base de datos: archivo local o Turso
 src/codigos.js    Generación y normalización de los códigos
 src/pdf.js        Diseño de la boleta en PDF
 paginas/          HTML (servido por Express, no es estático)
-public/           CSS, JS y jsQR
+public/           CSS, JS, jsQR, logo y tipografía
 scripts/usuario.js
 ```

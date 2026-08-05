@@ -75,7 +75,7 @@ function filaBoleta(b) {
       <td class="mini fecha">${b.usada_en ? fechaHora(b.usada_en) : '—'}</td>
       <td>
         <div class="fila acciones">
-          <button class="suave chico" data-pdf="${b.id}">PDF</button>
+          <button class="suave chico" data-png="${b.id}">PNG</button>
           <button class="texto chico" data-estado="${b.id}" data-destino="${anulable ? 'anulada' : 'disponible'}">
             ${anulable ? 'Anular' : 'Restaurar'}
           </button>
@@ -113,7 +113,7 @@ async function cargarBoletas() {
 // ---------------------------------------------------------------- descargas
 
 /**
- * Baja el rango en varios ZIP. Un solo archivo con cientos de PDF supera
+ * Baja el rango en varios ZIP. Un solo archivo con cientos de imagenes supera
  * los limites de una funcion serverless, asi que se parte y se encadena.
  */
 async function descargarRango(desde, hasta) {
@@ -168,8 +168,8 @@ document.getElementById('descargar-todo').addEventListener('click', async (ev) =
 });
 
 tabla.addEventListener('click', async (ev) => {
-  const pdf = ev.target.closest('[data-pdf]');
-  if (pdf) return descargar(`/api/boletas/${pdf.dataset.pdf}/pdf`);
+  const imagen = ev.target.closest('[data-png]');
+  if (imagen) return descargar(`/api/boletas/${imagen.dataset.png}/png`);
 
   const cambio = ev.target.closest('[data-estado]');
   if (!cambio) return;
